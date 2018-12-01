@@ -349,6 +349,7 @@ public class Camera2BasicFragment extends Fragment
                                        @NonNull CaptureRequest request,
                                        @NonNull TotalCaptureResult result) {
             process(result);
+            process(result);
         }
 
     };
@@ -432,7 +433,7 @@ public class Camera2BasicFragment extends Fragment
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         view.findViewById(R.id.picture).setOnClickListener(this);
-//        view.findViewById(R.id.info).setOnClickListener(this);
+        view.findViewById(R.id.preview).setOnClickListener(this);
         view.findViewById(R.id.load).setOnClickListener(this);
         mTextureView = view.findViewById(R.id.texture);
         mImageView = view.findViewById(R.id.backgroundImage);
@@ -784,6 +785,7 @@ public class Camera2BasicFragment extends Fragment
                     mBackgroundHandler);
             Toast.makeText(getActivity(), "Snap", Toast.LENGTH_SHORT).show();
             mImageView.setImageURI(null);
+
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -892,18 +894,15 @@ public class Camera2BasicFragment extends Fragment
                 takePicture();
                 break;
             }
-            /*
-            case R.id.info: {
-                Activity activity = getActivity();
-                if (null != activity) {
-                    new AlertDialog.Builder(activity)
-                            .setMessage(R.string.intro_message)
-                            .setPositiveButton(android.R.string.ok, null)
-                            .show();
-                }
+
+            case R.id.preview: {
+                Intent intent = new Intent(view.getContext(), PreviewImage.class);
+                intent.putExtra("path",imagesavedurl );
+                startActivity(intent);
+
                 break;
             }
-            */
+
             case R.id.load: {
                 Intent intent = new Intent(view.getContext(), GalleryView.class);
                 startActivityForResult(intent, PICK_IMAGE);
@@ -931,6 +930,8 @@ public class Camera2BasicFragment extends Fragment
     /**
      * Saves a JPEG {@link Image} into the specified {@link File}.
      */
+    public static String imagesavedurl;
+
     private static class ImageSaver implements Runnable {
 
         /**
@@ -947,11 +948,12 @@ public class Camera2BasicFragment extends Fragment
             ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
-
             Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
             Matrix matrix = new Matrix();
             matrix.postRotate(90);
             Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+
+            imagesavedurl = rotatedBitmap.toString();
 
             MediaStore.Images.Media.insertImage(MainActivity.applicationContext.getContentResolver(), rotatedBitmap, "TEST", "DESCRIPTION");
 
