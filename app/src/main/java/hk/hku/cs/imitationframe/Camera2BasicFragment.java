@@ -62,7 +62,6 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -174,7 +173,7 @@ public class Camera2BasicFragment extends Fragment
      */
     private AutoFitTextureView mTextureView;
 
-    private ImageView mImageView;
+    private AutoFitImageView mImageView;
 
     /**
      * A {@link CameraCaptureSession } for camera preview.
@@ -497,12 +496,7 @@ public class Camera2BasicFragment extends Fragment
     private void setUpCameraOutputs(int width, int height) {
         Activity activity = getActivity();
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
-
-
         try {
-            for (String cameraId : manager.getCameraIdList()) {
-                Log.e("ABC", "********* available cameras " + cameraId);
-            }
 
 //            if (mCameraId is not in the list) {
 //                throw exception
@@ -619,7 +613,6 @@ public class Camera2BasicFragment extends Fragment
     }
 
     private void reopenCamera() {
-        Log.d("AW", "*********** reopenCamera " + mTextureView.isAvailable());
         if (mTextureView.isAvailable()) {
             openCamera(mTextureView.getWidth(), mTextureView.getHeight());
         } else {
@@ -631,9 +624,7 @@ public class Camera2BasicFragment extends Fragment
      * Opens the camera specified by {@link Camera2BasicFragment#mCameraId}.
      */
     private void openCamera(int width, int height) {
-        Log.d("AW", "********* opening camera " + mCameraId);
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestCameraPermission();
             return;
         }
@@ -716,8 +707,7 @@ public class Camera2BasicFragment extends Fragment
             Surface surface = new Surface(texture);
 
             // We set up a CaptureRequest.Builder with the output Surface.
-            mPreviewRequestBuilder
-                    = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             mPreviewRequestBuilder.addTarget(surface);
 
             // Here, we create a CameraCaptureSession for camera preview.
@@ -735,15 +725,13 @@ public class Camera2BasicFragment extends Fragment
                             mCaptureSession = cameraCaptureSession;
                             try {
                                 // Auto focus should be continuous for camera preview.
-                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
                                 // Flash is automatically enabled when necessary.
                                 setAutoFlash(mPreviewRequestBuilder);
 
                                 // Finally, we start displaying the camera preview.
                                 mPreviewRequest = mPreviewRequestBuilder.build();
-                                mCaptureSession.setRepeatingRequest(mPreviewRequest,
-                                        mCaptureCallback, mBackgroundHandler);
+                                mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mBackgroundHandler);
                             } catch (CameraAccessException e) {
                                 e.printStackTrace();
                             }
@@ -919,7 +907,6 @@ public class Camera2BasicFragment extends Fragment
 
     @Override
     public void onClick(View view) {
-        Log.d("AW", "************ onClick " + view.getId());
         switch (view.getId()) {
             case R.id.picture: {
                 takePicture();
@@ -951,7 +938,7 @@ public class Camera2BasicFragment extends Fragment
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == PICK_IMAGE && resultCode == Activity.RESULT_OK) {
             Uri content = data.getData();
-            Log.d("AW", content.toString());
+            mImageView.reset();
             mImageView.setImageURI(content);
         }
     }
