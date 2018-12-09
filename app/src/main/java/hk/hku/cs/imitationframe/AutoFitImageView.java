@@ -83,33 +83,107 @@ public class AutoFitImageView extends AppCompatImageView implements View.OnTouch
         layoutParams.rightMargin = 0;
 
     }
-    private int x, y, dx, dy;
+
+    private static final float MOVEMENT_THRESHOLD = 5.0f;
+    private float x, y, dx, dy, x0,y0, x1,y1;
+    private int originalHeight, originalWidth;
 
     private float lastX, lastY;
+    private double lastDistance;
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         if (this.getDrawable() == null) return false;
 
-        if (event.getPointerCount() == 1) {
-            switch (event.getAction()) {
+        Log.d(TAG, "****** onTouch " + event.getPointerCount() + " - " + event.getActionMasked() + " " + MotionEvent.actionToString(event.getActionMasked()));
+
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) v.getLayoutParams();
+
+        if (event.getPointerCount() <= 2) {
+            switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_POINTER_DOWN:
                     lastX = v.getX();
                     lastY = v.getY();
-                    x = (int)event.getRawX();
-                    y = (int)event.getRawY();
+
+                    if (event.getPointerCount() == 1) {
+                        x = (int) event.getRawX();
+                        y = (int) event.getRawY();
+                    } else if (event.getPointerCount() == 2) {
+                        int p0 = event.getPointerId(0);
+                        int p1 = event.getPointerId(1);
+
+                        x0 = (int) event.getX(p0);
+                        y0 = (int) event.getY(p0);
+
+                        x1 = (int) event.getX(p1);
+                        y1 = (int) event.getY(p1);
+
+                        x = (x0 + x1)/2.0f;
+                        y = (y0 + y1)/2.0f;
+                        lastDistance = Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2));
+                    }
+
+                    originalHeight = layoutParams.height;
+                    originalWidth = layoutParams.width;
+                    if (originalHeight < 0) originalHeight = windowHeight;
+                    if (originalWidth < 0) originalWidth = windowWidth;
+
+                    Log.d(TAG, "********** original " + originalHeight + "x" + originalWidth);
                     break;
 
                 case MotionEvent.ACTION_MOVE:
-                    dx = (int)event.getRawX() - x;
-                    dy = (int)event.getRawY() - y;
-                    v.setX(lastX + dx);
-                    v.setY(lastY + dy);
+                    if (event.getPointerCount() == 1) {
+                        dx = (int)event.getRawX() - x;
+                        dy = (int)event.getRawY() - y;
+
+                        v.setX(lastX + dx);
+                        v.setY(lastY + dy);
+
+                        Log.d(TAG, "********** points (" + (int)event.getRawX() + "," + (int)event.getRawY() + ")");
+
+                    } else if (event.getPointerCount() == 2) {
+                        int p0 = event.getPointerId(0);
+                        int p1 = event.getPointerId(1);
+
+                        x0 = (int) event.getX(p0);
+                        y0 = (int) event.getY(p0);
+
+                        x1 = (int) event.getX(p1);
+                        y1 = (int) event.getY(p1);
+
+                        dx = (x0 + x1)/2.0f - x;
+                        dy = (y0 + y1)/2.0f - y;
+
+                        double distance = Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2));
+                        Log.d(TAG, "********** distance " + distance);
+                        double ratio = distance / lastDistance;
+                        Log.d(TAG, "********** ratio " + ratio);
+
+
+                        layoutParams.height = (int)(originalHeight * ratio);
+                        layoutParams.width = (int)(originalWidth * ratio);
+
+                        Log.d(TAG, "********** size " + layoutParams.width + "x" + layoutParams.height);
+                        Log.d(TAG, "********** points (" + x0 + "," + y0 + ") (" + x1 + "," + y1 + ")");
+
+                        v.setX((x0 + x1)/2.0f - layoutParams.width/2.0f);
+                        v.setY((y0 + y1)/2.0f - layoutParams.height/2.0f);
+
+                        v.requestLayout();
+                        v.invalidate();
+                    }
+
+                    Log.d(TAG, "********** new position (" + v.getX() + "," + v.getY() + ")");
+
+//                    if (dx > MOVEMENT_THRESHOLD || dy > MOVEMENT_THRESHOLD) {
+//
+//                    } else {
+//                        Log.d(TAG, "********** ignored");
+//                    }
+
+//                    v.setX(0); v.setY(0); // just try resizing first
                     break;
             }
-
-        } else if (event.getPointerCount() == 2) {
-            MotionEvent.PointerCoords p = new MotionEvent.PointerCoords();
-            event.getPointerCoords(0, p);
 
         } else {
             Log.d(TAG, "ignoring " + event.getPointerCount() + " touches");
