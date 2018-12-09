@@ -20,6 +20,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -46,6 +47,7 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.provider.MediaStore;
@@ -65,6 +67,8 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -976,9 +980,31 @@ public class Camera2BasicFragment extends Fragment
             matrix.postRotate(90);
             Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
 
-            imagesavedurl = rotatedBitmap.toString();
+            String dirDCIM = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString();
+            File cameraFolder = new File(dirDCIM, "/Camera");
+            cameraFolder.mkdirs();
+            String filename = "IMG_" + System.currentTimeMillis() + ".jpg";
+            File file = new File(cameraFolder, filename);
+            Log.i(TAG, "" + file);
+            if (file.exists())
+                file.delete();
+            try (FileOutputStream out = new FileOutputStream(file)) {
+                rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                out.flush();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-            MediaStore.Images.Media.insertImage(MainActivity.applicationContext.getContentResolver(), rotatedBitmap, "TEST", "DESCRIPTION");
+            imagesavedurl = file.getAbsolutePath();
+
+            ContentResolver cr = MainActivity.applicationContext.getContentResolver();
+//            MediaStore.Images.Media.insertImage(cr, rotatedBitmap, "TEST", "DESCRIPTION");
+
+            try {
+                MediaStore.Images.Media.insertImage(cr, file.getAbsolutePath(), "name", "description");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
 
             mImage.close();
         }
