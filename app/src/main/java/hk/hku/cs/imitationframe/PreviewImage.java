@@ -8,7 +8,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
@@ -23,28 +25,31 @@ public class PreviewImage extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_gallery_view);
+        setContentView(R.layout.activity_preview_image);
         Intent intent = getIntent();
         path = intent.getStringExtra("path");
-        GalleryPreviewImg = (ImageView) findViewById(R.id.GalleryPreviewImg);
+
+        GalleryPreviewImg = (ImageView) findViewById(R.id.PreviewImg);
         Glide.with(PreviewImage.this)
                 .load(new File(path)) // Uri of the picture
                 .into(GalleryPreviewImg);
+
+        Button btn_share = (Button) findViewById(R.id.share);
+        btn_share.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                Log.d("info","clickked");
+                onShareItem(view);
+            }
+        });
+
     }
 
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.share: {
-                onShareItem(view);
-                break;
-            }
-        }
-    }
 
     // Can be triggered by a view event such as a button press
     public void onShareItem(View v) {
         // Get access to bitmap image from view
-        ImageView ivImage = (ImageView) findViewById(R.id.GalleryPreviewImg);
+        ImageView ivImage = (ImageView) findViewById(R.id.PreviewImg);
         // Get access to the URI for the bitmap
         Uri bmpUri = getLocalBitmapUri(ivImage);
         if (bmpUri != null) {

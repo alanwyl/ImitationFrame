@@ -26,6 +26,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
@@ -33,6 +34,7 @@ import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -139,6 +141,9 @@ public class Camera2BasicFragment extends Fragment
 
     public static final int PICK_IMAGE = 901;
 
+    //flag to detect flash is on or off
+    private boolean isLighOn = false;
+
     /**
      * {@link TextureView.SurfaceTextureListener} handles several lifecycle events on a
      * {@link TextureView}.
@@ -212,6 +217,7 @@ public class Camera2BasicFragment extends Fragment
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
+
         }
 
         @Override
@@ -442,6 +448,8 @@ public class Camera2BasicFragment extends Fragment
         view.findViewById(R.id.preview).setOnClickListener(this);
         view.findViewById(R.id.load).setOnClickListener(this);
         view.findViewById(R.id.switch_camera).setOnClickListener(this);
+        view.findViewById(R.id.flash).setOnClickListener(this);
+        view.findViewById(R.id.setting).setOnClickListener(this);
         mTextureView = view.findViewById(R.id.texture);
         mImageView = view.findViewById(R.id.backgroundImage);
     }
@@ -918,9 +926,28 @@ public class Camera2BasicFragment extends Fragment
             }
 
             case R.id.preview: {
-                Intent intent = new Intent(view.getContext(), PreviewImage.class);
-                intent.putExtra("path",imagesavedurl );
-                startActivity(intent);
+                // Find the last picture
+                String[] projection = new String[]{
+                        MediaStore.Images.ImageColumns._ID,
+                        MediaStore.Images.ImageColumns.DATA,
+                        MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME,
+                        MediaStore.Images.ImageColumns.DATE_TAKEN,
+                        MediaStore.Images.ImageColumns.MIME_TYPE
+                };
+                final Cursor cursor = getContext().getContentResolver()
+                        .query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, null,
+                                null, MediaStore.Images.ImageColumns.DATE_TAKEN + " DESC");
+
+                // Put it in the image view
+                if (cursor.moveToFirst()) {
+                    //final ImageView imageView = (ImageView) findViewById(R.id.pictureView);
+                    String imageLocation = cursor.getString(1);
+                    Intent intent = new Intent(view.getContext(), PreviewImage.class);
+                    intent.putExtra("path",imageLocation );
+                    startActivity(intent);
+                }
+
+                cursor.close();
 
                 break;
             }
@@ -934,6 +961,39 @@ public class Camera2BasicFragment extends Fragment
             case R.id.switch_camera: {
                 switchCamera();
                 break;
+            }
+
+            case R.id.setting:{
+
+            }
+
+            case R.id.flash: {
+                //do only flash light is supported
+
+                if (mFlashSupported){
+                    if (isLighOn) {
+
+                        Log.i("info", "torch is turn off!");
+
+                        /*p.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                        camera.setParameters(p);
+                        camera.stopPreview();*/
+                        isLighOn = false;
+
+                    } else {
+
+                        Log.i("info", "torch is turn on!");
+
+                        /*
+                        p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+
+                        camera.setParameters(p);
+                        camera.startPreview();
+                        */
+                        isLighOn = true;
+
+                    }
+                }
             }
         }
     }
@@ -957,7 +1017,6 @@ public class Camera2BasicFragment extends Fragment
     /**
      * Saves a JPEG {@link Image} into the specified {@link File}.
      */
-    public static String imagesavedurl;
 
     private static class ImageSaver implements Runnable {
 
@@ -994,8 +1053,6 @@ public class Camera2BasicFragment extends Fragment
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-            imagesavedurl = file.getAbsolutePath();
 
             ContentResolver cr = MainActivity.applicationContext.getContentResolver();
 //            MediaStore.Images.Media.insertImage(cr, rotatedBitmap, "TEST", "DESCRIPTION");
