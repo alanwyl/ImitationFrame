@@ -14,22 +14,27 @@
         android:text="Setting"
         android:textSize="22sp" />
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        >
 
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:layout_margin="30dp"
-            android:text="FieldSetting1"
+            android:text="Transparency"
+            android:id="@+id/transparency"
             android:textSize="22sp" />
 
 
-    </LinearLayout>
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="100"
+        android:layout_margin="30dp"
+        android:progress="50" />
+
+
+
 
     <Button
         android:layout_width="wrap_content"

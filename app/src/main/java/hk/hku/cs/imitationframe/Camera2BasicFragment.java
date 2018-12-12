@@ -68,8 +68,10 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import java.io.File;
@@ -986,19 +988,19 @@ public class Camera2BasicFragment extends Fragment
                 // which view you pass in doesn't matter, it is only used for the window tolken
                 popupWindow.showAtLocation(view, Gravity.TOP, 0, 0);
 
-                /*
-                // dismiss the popup window when touched
-                popupView.setOnTouchListener(new View.OnTouchListener() {
+
+                SeekBar seekBar = view.findViewById(R.id.seekBar);
+
+                Button btn_ok = popupView.findViewById(R.id.ok);
+                btn_ok.setOnClickListener(new View.OnClickListener(){
                     @Override
-                    public boolean onTouch(View v, MotionEvent event) {
+                    public void onClick(View view){
+                        //get value from seekbar
+
+
                         popupWindow.dismiss();
-                        return true;
                     }
                 });
-                */
-
-
-
             }
 
             case R.id.flash: {
