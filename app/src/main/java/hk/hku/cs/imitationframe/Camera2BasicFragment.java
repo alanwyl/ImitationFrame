@@ -142,7 +142,7 @@ public class Camera2BasicFragment extends Fragment
     public static final int PICK_IMAGE = 901;
 
     //flag to detect flash is on or off
-    private boolean isLighOn = false;
+    private boolean isLightOn = false;
 
     /**
      * {@link TextureView.SurfaceTextureListener} handles several lifecycle events on a
@@ -971,30 +971,44 @@ public class Camera2BasicFragment extends Fragment
                 //do only flash light is supported
 
                 if (mFlashSupported){
-                    if (isLighOn) {
 
-                        Log.i("info", "torch is turn off!");
-
-                        /*p.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-                        camera.setParameters(p);
-                        camera.stopPreview();*/
-                        isLighOn = false;
+                    if (isLightOn) {
+                        //currently is on --> turn off
+                        flashLightOff();
+                        isLightOn = false;
 
                     } else {
 
-                        Log.i("info", "torch is turn on!");
-
-                        /*
-                        p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-
-                        camera.setParameters(p);
-                        camera.startPreview();
-                        */
-                        isLighOn = true;
+                        flashLightOn();
 
                     }
                 }
             }
+        }
+    }
+
+    private void flashLightOn() {
+        Activity activity = getActivity();
+        CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
+
+        try {
+            //String cameraId = cameraManager.getCameraIdList()[0];
+            manager.setTorchMode(mCameraId, false);
+            isLightOn = true;
+
+        } catch (CameraAccessException e) {
+        }
+    }
+
+    private void flashLightOff() {
+        Activity activity = getActivity();
+        CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
+
+        try {
+            //String cameraId = cameraManager.getCameraIdList()[0];
+            manager.setTorchMode(mCameraId, false);
+            isLightOn = false;
+        } catch (CameraAccessException e) {
         }
     }
 
