@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/take_picture"
+        android:layout_gravity="start"
+        android:text="Take Picture"/>
 
     <GridView
         android:id="@+id/galleryGridView"
@@ -21,7 +27,8 @@
         android:gravity="center"
         android:stretchMode="columnWidth"
         android:background="#ffffff">
-    </GridView>
 
+
+    </GridView>
 
 </LinearLayout>
