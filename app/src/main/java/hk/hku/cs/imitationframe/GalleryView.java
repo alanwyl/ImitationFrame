@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 public class GalleryView extends AppCompatActivity {
     private static final int THUMB_SIZE = 400; // TODO change to be calculated using screen width
 
+    Button takepic;
     /**
      * The images.
      */
@@ -32,6 +34,8 @@ public class GalleryView extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery_view);
+
+        takepic = (Button)findViewById(R.id.take_picture);
 
         GridView gallery = findViewById(R.id.galleryGridView);
         gallery.setAdapter(new ImageAdapter(this));
@@ -51,6 +55,22 @@ public class GalleryView extends AppCompatActivity {
 
             }
         });
+
+        takepic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dispatchTakePictureIntent();
+            }
+        });
+    }
+
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
     }
 
     /**

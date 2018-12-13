@@ -12,17 +12,19 @@
         android:layout_centerInParent="true"
         android:layout_margin="30dp"
         android:text="Setting"
+        android:textColor="@color/cardview_light_background"
         android:textSize="22sp" />
 
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:layout_margin="30dp"
-            android:text="Transparency"
-            android:id="@+id/transparency"
-            android:textSize="22sp" />
+    <TextView
+        android:id="@+id/transparency"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_margin="30dp"
+        android:text="Transparency"
+        android:textColor="@color/cardview_light_background"
+        android:textSize="22sp" />
 
 
     <SeekBar

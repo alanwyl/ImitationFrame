@@ -976,7 +976,7 @@ public class Camera2BasicFragment extends Fragment
                 Activity activity = getActivity();
                 LayoutInflater inflater = (LayoutInflater)
                         activity.getSystemService(LAYOUT_INFLATER_SERVICE);
-                View popupView = inflater.inflate(R.layout.pop_up_window, null);
+                final View popupView = inflater.inflate(R.layout.pop_up_window, null);
 
                 // create the popup window
                 int width = LinearLayout.LayoutParams.FILL_PARENT;
@@ -989,13 +989,27 @@ public class Camera2BasicFragment extends Fragment
                 popupWindow.showAtLocation(view, Gravity.TOP, 0, 0);
 
 
-                SeekBar seekBar = view.findViewById(R.id.seekBar);
+                int slider_value =  (int)mImageView.getAlpha();
+                slider_value = slider_value*100;
+
+                final SeekBar seekBar = view.findViewById(R.id.seekBar);
+
+                if (slider_value!=0)
+                    seekBar.setProgress(slider_value);
+
 
                 Button btn_ok = popupView.findViewById(R.id.ok);
                 btn_ok.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(View view){
                         //get value from seekbar
+                        final SeekBar seekBar2 = popupView.findViewById(R.id.seekBar);
+
+                        float slider_value_final= (float)seekBar2.getProgress();
+                        slider_value_final = slider_value_final/100;
+
+                        if (slider_value_final!=0)
+                            mImageView.setAlpha(slider_value_final);
 
 
                         popupWindow.dismiss();
