@@ -267,6 +267,7 @@ public class Camera2BasicFragment extends Fragment
 
         @Override
         public void onImageAvailable(ImageReader reader) {
+            Log.d(TAG, "onImageAvailable");
             Image image = reader.acquireNextImage();
 //            mBackgroundHandler.post(new ImageSaver(image));
 
@@ -596,7 +597,7 @@ public class Camera2BasicFragment extends Fragment
 
                 // For still image captures, we use the largest available size.
                 Size largest = Collections.max(Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)), new CompareSizesByArea());
-                mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),ImageFormat.JPEG, /*maxImages*/10);
+                mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),ImageFormat.JPEG, /*maxImages*/1);
                 mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mBackgroundHandler);
 
                 // Find out if we need to swap dimension to get the preview size relative to sensor coordinate.
@@ -1168,7 +1169,7 @@ public class Camera2BasicFragment extends Fragment
             cameraFolder.mkdirs();
             String filename = "IMG_" + System.currentTimeMillis() + ".jpg";
             File file = new File(cameraFolder, filename);
-            Log.i(TAG, "" + file);
+            Log.i(TAG, "Saving to " + file);
             if (file.exists())
                 file.delete();
             try (FileOutputStream out = new FileOutputStream(file)) {
