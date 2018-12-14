@@ -14,8 +14,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-
-
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
@@ -30,50 +28,47 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:scaleType="centerInside"
-            android:alpha="0.5"
             android:contentDescription="background"/>
-
 
     </RelativeLayout>
 
 
-    <FrameLayout
+    <android.support.v7.widget.GridLayout
+        xmlns:grid="http://schemas.android.com/apk/res-auto"
         android:id="@+id/control"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="120dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
         android:layout_marginBottom="0dp"
         android:layout_marginStart="0dp"
+        grid:columnCount="3"
         android:background="@color/control_background">
 
         <ImageButton
-            android:id="@+id/picture"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_shutter"
-            android:background="@null"
-            android:text="@string/picture"/>
-
-        <ImageButton
             android:id="@+id/load"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|start"
+            android:layout_height="match_parent"
+            grid:layout_columnWeight="1"
             android:src="@drawable/ic_gallery"
             android:background="@null"
-            android:text="@string/load"/>
+            android:padding="32dp"
+            android:scaleType="fitCenter"/>
+
+        <ImageButton
+            android:id="@+id/picture"
+            android:layout_height="match_parent"
+            grid:layout_columnWeight="1"
+            android:src="@drawable/ic_shutter"
+            android:background="@null"
+            android:padding="28dp"
+            android:scaleType="fitCenter"/>
 
         <Button
             android:id="@+id/preview"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|end"
+            android:layout_height="match_parent"
+            grid:layout_columnWeight="1"
             android:text="Preview"/>
-
-
-    </FrameLayout>
+    </android.support.v7.widget.GridLayout>
 
     <FrameLayout
         android:id="@+id/topBar"

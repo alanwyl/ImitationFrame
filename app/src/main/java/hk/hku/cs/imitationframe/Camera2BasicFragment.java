@@ -34,7 +34,6 @@ import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -63,12 +62,10 @@ import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
@@ -974,8 +971,7 @@ public class Camera2BasicFragment extends Fragment
             case R.id.setting:{
                 // inflate the layout of the popup window
                 Activity activity = getActivity();
-                LayoutInflater inflater = (LayoutInflater)
-                        activity.getSystemService(LAYOUT_INFLATER_SERVICE);
+                LayoutInflater inflater = (LayoutInflater) activity.getSystemService(LAYOUT_INFLATER_SERVICE);
                 final View popupView = inflater.inflate(R.layout.pop_up_window, null);
 
                 // create the popup window
@@ -988,33 +984,31 @@ public class Camera2BasicFragment extends Fragment
                 // which view you pass in doesn't matter, it is only used for the window tolken
                 popupWindow.showAtLocation(view, Gravity.TOP, 0, 0);
 
-
-                int slider_value =  (int)mImageView.getAlpha();
-                slider_value = slider_value*100;
-
-                final SeekBar seekBar = view.findViewById(R.id.seekBar);
-
-                if (slider_value!=0)
-                    seekBar.setProgress(slider_value);
-
-
-                Button btn_ok = popupView.findViewById(R.id.ok);
-                btn_ok.setOnClickListener(new View.OnClickListener(){
+                final SeekBar seekBar = popupView.findViewById(R.id.seekBar);
+                seekBar.setProgress((int) (mImageView.getAlpha() * 100));
+                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
                     @Override
-                    public void onClick(View view){
-                        //get value from seekbar
-                        final SeekBar seekBar2 = popupView.findViewById(R.id.seekBar);
-
-                        float slider_value_final= (float)seekBar2.getProgress();
-                        slider_value_final = slider_value_final/100;
-
-                        if (slider_value_final!=0)
-                            mImageView.setAlpha(slider_value_final);
-
-
-                        popupWindow.dismiss();
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        mImageView.setAlpha(progress/100f);
                     }
+
+                    @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                    @Override public void onStopTrackingTouch(SeekBar seekBar) {}
                 });
+
+                final SeekBar seekBarRotate = popupView.findViewById(R.id.seekBar_rotate);
+                seekBarRotate.setProgress(mImageView.getRotationDegree());
+                seekBarRotate.incrementProgressBy(15);
+                seekBarRotate.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        mImageView.rotate(progress);
+                    }
+
+                    @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                    @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+                });
+
             }
 
             case R.id.flash: {

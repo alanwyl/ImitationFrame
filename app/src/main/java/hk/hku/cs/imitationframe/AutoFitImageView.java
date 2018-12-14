@@ -3,6 +3,7 @@ package hk.hku.cs.imitationframe;
 import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.graphics.Matrix;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -10,6 +11,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.RotateAnimation;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 /**
@@ -18,6 +20,7 @@ import android.widget.RelativeLayout;
 public class AutoFitImageView extends AppCompatImageView implements View.OnTouchListener {
     private static final String TAG = "AW.AutoFitImageView";
     private int windowWidth, windowHeight;
+    private int rotationDegree;
 
     public AutoFitImageView(Context context) {
         this(context, null);
@@ -35,6 +38,9 @@ public class AutoFitImageView extends AppCompatImageView implements View.OnTouch
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrices);
         windowWidth = metrices.widthPixels;
         windowHeight = metrices.heightPixels;
+
+        setAlpha(0.5f);
+        rotationDegree = 0;
     }
 
     public void reset() {
@@ -45,10 +51,14 @@ public class AutoFitImageView extends AppCompatImageView implements View.OnTouch
         layoutParams.rightMargin = 0;
         setX(0);
         setY(0);
+        rotate(0);
+        setImageMatrix(new Matrix());
     }
 
     private static final float MOVEMENT_THRESHOLD = 5.0f;
-    private float x, y, dx, dy, x0,y0, x1,y1;
+    private static final float ZOOM_THRESHOLD = 0.05f;
+
+    private float x,y, dx,dy, x0,y0, x1,y1;
     private int originalHeight, originalWidth;
 
     private float lastX, lastY;
@@ -113,28 +123,30 @@ public class AutoFitImageView extends AppCompatImageView implements View.OnTouch
                         dy = (y0 + y1)/2.0f - y;
 
                         double distance = Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2));
-                        Log.d(TAG, "********** distance " + distance);
                         double ratio = distance / lastDistance;
-                        Log.d(TAG, "********** ratio " + ratio);
 
                         layoutParams.width = (int)(originalWidth * ratio);
                         layoutParams.height = (int)(originalHeight * ratio);
 
-                        Log.d(TAG, "********** size " + layoutParams.width + "x" + layoutParams.height);
-                        Log.d(TAG, "********** points (" + x0 + "," + y0 + ") (" + x1 + "," + y1 + ")");
+                        Matrix matrix = new Matrix();
+                        ImageView imageView = (ImageView) v;
+                        imageView.setScaleType(ScaleType.MATRIX);
 
-                        v.setX((x0 + x1)/2.0f - layoutParams.width/2.0f);
-                        v.setY((y0 + y1)/2.0f - layoutParams.height/2.0f);
+                        if (dx >= MOVEMENT_THRESHOLD || dy >= MOVEMENT_THRESHOLD) {
+                            matrix.postTranslate(dx, dy);
+                        }
+                        if (Math.abs(1-ratio) >= ZOOM_THRESHOLD) {
+                            matrix.postScale((float)ratio, (float)ratio);
+                        }
+
+                        matrix.postRotate(rotationDegree);
+                        imageView.setImageMatrix(matrix);
 
                         v.requestLayout();
                         v.invalidate();
                     }
 
                     lastPointerCount = event.getPointerCount();
-
-//                    }
-
-//                    v.setX(0); v.setY(0); // just try resizing first
                     break;
             }
 
@@ -146,15 +158,18 @@ public class AutoFitImageView extends AppCompatImageView implements View.OnTouch
         return true;
     }
 
-    // for reference only
-    private void rotate(float degree) {
+    public void rotate(int degree) {
+        rotationDegree = degree;
         final RotateAnimation rotateAnim = new RotateAnimation(0.0f, degree,
                 RotateAnimation.RELATIVE_TO_SELF, 0.5f,
                 RotateAnimation.RELATIVE_TO_SELF, 0.5f);
-
         rotateAnim.setDuration(0);
         rotateAnim.setFillAfter(true);
         startAnimation(rotateAnim);
+    }
+
+    public int getRotationDegree() {
+        return rotationDegree;
     }
 
     private Activity getActivity() {
@@ -167,4 +182,6 @@ public class AutoFitImageView extends AppCompatImageView implements View.OnTouch
         }
         return null;
     }
+
+
 }
