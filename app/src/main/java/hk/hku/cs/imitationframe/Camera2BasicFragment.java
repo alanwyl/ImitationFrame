@@ -268,20 +268,24 @@ public class Camera2BasicFragment extends Fragment
         @Override
         public void onImageAvailable(ImageReader reader) {
             Image image = reader.acquireNextImage();
-            mBackgroundHandler.post(new ImageSaver(image));
-/*
+//            mBackgroundHandler.post(new ImageSaver(image));
+
             ByteBuffer buffer = image.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
             Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
+            mBackgroundHandler.post(new ImageSaver(bitmap));
+
             Matrix matrix = new Matrix();
             matrix.postRotate(90);
 
             final Bitmap previewBitmap;
+            int size = Math.abs(bitmap.getWidth() - bitmap.getHeight());
+
             if (bitmap.getWidth() >= bitmap.getHeight()) {
-                previewBitmap = Bitmap.createBitmap(bitmap, bitmap.getWidth()/2 - bitmap.getHeight()/2, 0, 200, 200, matrix, true);
+                previewBitmap = Bitmap.createBitmap(bitmap, size, 0, bitmap.getHeight(), bitmap.getHeight(), matrix, true);
             } else {
-                previewBitmap = Bitmap.createBitmap(bitmap, 0, bitmap.getHeight()/2 - bitmap.getWidth()/2, 200, 200, matrix, true);
+                previewBitmap = Bitmap.createBitmap(bitmap, 0, size, bitmap.getWidth(), bitmap.getWidth(), matrix, true);
             }
 
             getActivity().runOnUiThread(new Runnable() {
@@ -290,7 +294,7 @@ public class Camera2BasicFragment extends Fragment
                     mPreviewImageView.setImageBitmap(previewBitmap);
                 }
             });
-*/
+
         }
 
     };
@@ -1135,25 +1139,29 @@ public class Camera2BasicFragment extends Fragment
      */
 
     private static class ImageSaver implements Runnable {
-
-        /**
-         * The JPEG image
-         */
-        private final Image mImage;
+        private Image mImage;
+        private Bitmap mBitmap;
 
         ImageSaver(Image image) {
             mImage = image;
         }
+        ImageSaver(Bitmap bitmap) {
+            mBitmap = bitmap;
+        }
 
         @Override
         public void run() {
-            ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
-            byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
+            if (mBitmap == null) {
+                ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
+                byte[] bytes = new byte[buffer.remaining()];
+                buffer.get(bytes);
+                mBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
+                mImage.close();
+            }
+
             Matrix matrix = new Matrix();
             matrix.postRotate(90);
-            Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            Bitmap rotatedBitmap = Bitmap.createBitmap(mBitmap, 0, 0, mBitmap.getWidth(), mBitmap.getHeight(), matrix, true);
 
             String dirDCIM = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString();
             File cameraFolder = new File(dirDCIM, "/Camera");
@@ -1179,7 +1187,7 @@ public class Camera2BasicFragment extends Fragment
                 e.printStackTrace();
             }
 
-            mImage.close();
+
         }
 
     }
