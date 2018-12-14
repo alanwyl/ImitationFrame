@@ -29,6 +29,7 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
@@ -66,10 +67,14 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -262,7 +267,30 @@ public class Camera2BasicFragment extends Fragment
 
         @Override
         public void onImageAvailable(ImageReader reader) {
-            mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage()));
+            Image image = reader.acquireNextImage();
+            mBackgroundHandler.post(new ImageSaver(image));
+/*
+            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+            byte[] bytes = new byte[buffer.remaining()];
+            buffer.get(bytes);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
+            Matrix matrix = new Matrix();
+            matrix.postRotate(90);
+
+            final Bitmap previewBitmap;
+            if (bitmap.getWidth() >= bitmap.getHeight()) {
+                previewBitmap = Bitmap.createBitmap(bitmap, bitmap.getWidth()/2 - bitmap.getHeight()/2, 0, 200, 200, matrix, true);
+            } else {
+                previewBitmap = Bitmap.createBitmap(bitmap, 0, bitmap.getHeight()/2 - bitmap.getWidth()/2, 200, 200, matrix, true);
+            }
+
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mPreviewImageView.setImageBitmap(previewBitmap);
+                }
+            });
+*/
         }
 
     };
@@ -299,6 +327,8 @@ public class Camera2BasicFragment extends Fragment
      */
     private int mSensorOrientation;
 
+    private ImageButton mFlashButton;
+    private ImageView mPreviewImageView;
 
     /**
      * A {@link CameraCaptureSession.CaptureCallback} that handles events related to JPEG capture.
@@ -450,13 +480,39 @@ public class Camera2BasicFragment extends Fragment
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         view.findViewById(R.id.picture).setOnClickListener(this);
-        view.findViewById(R.id.preview).setOnClickListener(this);
         view.findViewById(R.id.load).setOnClickListener(this);
         view.findViewById(R.id.switch_camera).setOnClickListener(this);
         view.findViewById(R.id.flash).setOnClickListener(this);
         view.findViewById(R.id.setting).setOnClickListener(this);
         mTextureView = view.findViewById(R.id.texture);
         mImageView = view.findViewById(R.id.backgroundImage);
+        mFlashButton = view.findViewById(R.id.flash);
+        mPreviewImageView = view.findViewById(R.id.preview);
+
+
+        String lastImageLocation = getLastImageLocation();
+        if (lastImageLocation != null && lastImageLocation.length() > 0) {
+            Glide.with(getActivity())
+                    .load(new File(lastImageLocation)) // Uri of the picture
+                    .into(mPreviewImageView);
+        } else {
+            mPreviewImageView.setBackgroundColor(Color.BLACK);
+        }
+
+        mPreviewImageView.setClickable(true);
+        mPreviewImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String imageLocation = getLastImageLocation();
+                if (imageLocation != null && imageLocation.length() > 0) {
+                    Intent intent = new Intent(view.getContext(), PreviewImage.class);
+                    intent.putExtra("path", imageLocation);
+                    startActivity(intent);
+                }
+            }
+        });
+
+        flashLightOff();
     }
 
     @Override
@@ -930,33 +986,6 @@ public class Camera2BasicFragment extends Fragment
                 break;
             }
 
-            case R.id.preview: {
-                // Find the last picture
-                String[] projection = new String[]{
-                        MediaStore.Images.ImageColumns._ID,
-                        MediaStore.Images.ImageColumns.DATA,
-                        MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME,
-                        MediaStore.Images.ImageColumns.DATE_TAKEN,
-                        MediaStore.Images.ImageColumns.MIME_TYPE
-                };
-                final Cursor cursor = getContext().getContentResolver()
-                        .query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, null,
-                                null, MediaStore.Images.ImageColumns.DATE_TAKEN + " DESC");
-
-                // Put it in the image view
-                if (cursor.moveToFirst()) {
-                    //final ImageView imageView = (ImageView) findViewById(R.id.pictureView);
-                    String imageLocation = cursor.getString(1);
-                    Intent intent = new Intent(view.getContext(), PreviewImage.class);
-                    intent.putExtra("path",imageLocation );
-                    startActivity(intent);
-                }
-
-                cursor.close();
-
-                break;
-            }
-
             case R.id.load: {
                 Intent intent = new Intent(view.getContext(), GalleryView.class);
                 startActivityForResult(intent, PICK_IMAGE);
@@ -1031,6 +1060,32 @@ public class Camera2BasicFragment extends Fragment
         }
     }
 
+
+    private String getLastImageLocation() {
+        String location = "";
+
+        String[] projection = new String[]{
+                MediaStore.Images.ImageColumns._ID,
+                MediaStore.Images.ImageColumns.DATA,
+                MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME,
+                MediaStore.Images.ImageColumns.DATE_TAKEN,
+                MediaStore.Images.ImageColumns.MIME_TYPE
+        };
+        final Cursor cursor = getContext().getContentResolver()
+                .query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, null,
+                        null, MediaStore.Images.ImageColumns.DATE_TAKEN + " DESC");
+
+        // Put it in the image view
+        if (cursor.moveToFirst()) {
+            //final ImageView imageView = (ImageView) findViewById(R.id.pictureView);
+            location = cursor.getString(1);
+        }
+
+        cursor.close();
+
+        return location;
+    }
+
     private void flashLightOn() {
         Activity activity = getActivity();
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
@@ -1039,6 +1094,7 @@ public class Camera2BasicFragment extends Fragment
             //String cameraId = cameraManager.getCameraIdList()[0];
             manager.setTorchMode(mCameraId, false);
             isLightOn = true;
+            mFlashButton.setImageResource(R.drawable.ic_flash_on);
 
         } catch (CameraAccessException e) {
         }
@@ -1052,6 +1108,8 @@ public class Camera2BasicFragment extends Fragment
             //String cameraId = cameraManager.getCameraIdList()[0];
             manager.setTorchMode(mCameraId, false);
             isLightOn = false;
+            mFlashButton.setImageResource(R.drawable.ic_flash_off);
+
         } catch (CameraAccessException e) {
         }
     }
