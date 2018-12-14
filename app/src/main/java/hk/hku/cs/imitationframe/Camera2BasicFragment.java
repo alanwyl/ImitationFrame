@@ -275,6 +275,7 @@ public class Camera2BasicFragment extends Fragment
             buffer.get(bytes);
             Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
             mBackgroundHandler.post(new ImageSaver(bitmap));
+            image.close();
 
             Matrix matrix = new Matrix();
             matrix.postRotate(90);
@@ -878,7 +879,6 @@ public class Camera2BasicFragment extends Fragment
             mState = STATE_WAITING_LOCK;
             mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
                     mBackgroundHandler);
-            Toast.makeText(getActivity(), "Snap", Toast.LENGTH_SHORT).show();
             mImageView.setImageURI(null);
 
         } catch (CameraAccessException e) {
